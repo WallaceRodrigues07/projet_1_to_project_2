@@ -11,20 +11,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Supabase CLI
-        uses: supabase/setup-cli@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
 
+        
       - name: Login to Supabase
-        run: supabase login --token ${{ secrets.SUPABASE_TOKEN }}
+        run: npx supabase login --token ${{ secrets.SUPABASE_TOKEN }}
 
       - name: Link Project X
-        run: supabase link --project-ref ${{ secrets.PROJECT_X_REF_ID }} -p ${{ secrets.PROJECT_X_API_KEY }}
+        run: npx supabase link --project-ref ${{ secrets.PROJECT_X_REF_ID }} -p ${{ secrets.PROJECT_X_API_KEY }}
 
       - name: Pull Project X schema
-        run: supabase db pull -p ${{ secrets.PROJECT_X_API_KEY }}
+        run: npx supabase db pull -p ${{ secrets.PROJECT_X_API_KEY }}
 
       - name: Link Project Y
-        run: supabase link --project-ref ${{ secrets.PROJECT_Y_REF_ID }} -p ${{ secrets.PROJECT_Y_API_KEY }}
+        run: npx supabase link --project-ref ${{ secrets.PROJECT_Y_REF_ID }} -p ${{ secrets.PROJECT_Y_API_KEY }}
 
       - name: Push schema to Project Y
-        run: supabase db push -p ${{ secrets.PROJECT_Y_API_KEY }} --yes
+        run: npx supabase db push -p ${{ secrets.PROJECT_Y_API_KEY }} --yes
