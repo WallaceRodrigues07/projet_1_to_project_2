@@ -1,48 +1,33 @@
-name: Backup PostgreSQL to Google DriveMore actions
+name: Supabase Homologation
 
 on:
-  push:
-    branches:
-      - main  
   workflow_dispatch:
 
-
-
 jobs:
-  backup:
+  homologation:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout do repositório
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
 
-      - name: Instalar dependências
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client zip
+      - name: Install Supabase CLI
+        run: npm install -g supabase
 
+      - name: Login to Supabase
+        run: supabase login --token ${{ secrets.SUPABASE_TOKEN }}
 
-      - name: Fazer backup com pg_dump (linha única)
-        env:
-          PGPASSWORD: ${{ secrets.PGPASSWORD }}
-        run: |
-          TIMESTAMP=$(TZ="America/Sao_Paulo" date +%Y%m%d_%H%M%S)
-          BACKUP_NAME="backup_$TIMESTAMP.sql"
-          ZIP_NAME="backup_$TIMESTAMP.zip"
+      - name: Link Project X
+        run: supabase link --project-ref ${{ secrets.PROJECT_X_REF }} -p ${{ secrets.PROJECT_X_API_KEY }}
 
-          pg_dump -h ${{ secrets.PGHOST }} \
-                  -p ${{ secrets.PGPORT }} \
-                  -U ${{ secrets.PGUSER }} \
-                  -d ${{ secrets.PGDATABASE }} \
-                  --no-password \
-                  -f $BACKUP_NAME
+      - name: Pull Project X schema
+        run: supabase db pull -p ${{ secrets.PROJECT_X_API_KEY }}
 
-          zip $ZIP_NAME $BACKUP_NAME
+      - name: Link Project Y
+        run: supabase link --project-ref ${{ secrets.PROJECT_Y_REF }} -p ${{ secrets.PROJECT_Y_API_KEY }}
 
-          echo "ZIP_NAME=$ZIP_NAME" >> $GITHUB_ENV
-
-      - name: Upload para o Google Drive
-        uses: adityak74/google-drive-upload-git-action@main
-        with:
-          credentials: ${{ secrets.CREDENTIALS }}
-          filename: ${{ env.ZIP_NAME }}
-          folderId: ${{ secrets.FOLDER_ID }}
+      - name: Push schema to Project Y
+        run: supabase db push -p ${{ secrets.PROJECT_Y_API_KEY }} --yes
