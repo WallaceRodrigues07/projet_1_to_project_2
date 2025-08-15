@@ -21,13 +21,13 @@ jobs:
         run: supabase login --token ${{ secrets.SUPABASE_TOKEN }}
 
       - name: Link Project X
-        run: supabase link --project-ref ${{ secrets.PROJECT_X_REF }} -p ${{ secrets.PROJECT_X_API_KEY }}
+        run: supabase link --project-ref ${{ secrets.PROJECT_X_REF_ID }} -p ${{ secrets.PROJECT_X_API_KEY }}
 
       - name: Pull Project X schema
         run: supabase db pull -p ${{ secrets.PROJECT_X_API_KEY }}
 
       - name: Link Project Y
-        run: supabase link --project-ref ${{ secrets.PROJECT_Y_REF }} -p ${{ secrets.PROJECT_Y_API_KEY }}
+        run: supabase link --project-ref ${{ secrets.PROJECT_Y_REF_ID }} -p ${{ secrets.PROJECT_Y_API_KEY }}
 
       - name: Push schema to Project Y
         run: supabase db push -p ${{ secrets.PROJECT_Y_API_KEY }} --yes
