@@ -24,8 +24,29 @@ jobs:
       - name: Configurar Supabase Project origem
         run: npx supabase link --project-ref ${{ secrets.PROJECT_X_REF_ID }} --password ${{ secrets.PROJECT_X_API_KEY }}
 
-      - name: fazer o pull das migrations de origem
-        run: npx supabase db pull -p ${{ secrets.PROJECT_X_API_KEY }}
+      - name: Tentar pegar migrações
+        id: migrate
+        continue-on-error: true
+        run: |
+          set -e
+          echo "🔄 Aplicando migrações..."
+          npx supabase db pull -p ${{ secrets.PROJECT_X_API_KEY }}
+
+      - name: Resolver inconsistências (se falhou)
+        if: steps.migrate.outcome == 'failure'
+        run: |
+          echo "⚠️ Erro ao aplicar migrações. Tentando reparar..."
+          # Identificar a última migração no erro
+          MIGRATION=$(npx supabase migration list | grep "remote" | tail -n1 | awk '{print $1}')
+          
+          if [ -n "$MIGRATION" ]; then
+            npx supabase migration repair --status reverted $MIGRATION
+          fi
+
+          echo "🔄 Tentando novamente aplicar migrações..."
+          npx supabase db pull -p ${{ secrets.PROJECT_X_API_KEY }}
+
+      
 
       - name: Configurar Supabase Project Destino
         run: npx supabase link --project-ref ${{ secrets.PROJECT_Y_REF_ID }} --password ${{ secrets.PROJECT_Y_API_KEY }}
