@@ -47,28 +47,10 @@ jobs:
           npx supabase db pull -p ${{ secrets.PROJECT_X_API_KEY }}
 
       
-
-      - name: Configurar Supabase Project Destino
-        run: npx supabase link --project-ref ${{ secrets.PROJECT_Y_REF_ID }} --password ${{ secrets.PROJECT_Y_API_KEY }}
-
-      - name: Tentar aplicar migrações
-        id: migrate
-        continue-on-error: true
+      - name: Commitar migrations
         run: |
-          set -e
-          echo "🔄 Aplicando migrações..."
-          npx supabase db push --include-all -p ${{ secrets.PROJECT_Y_API_KEY }}
-
-      - name: Resolver inconsistências (se falhou)
-        if: steps.migrate.outcome == 'failure'
-        run: |
-          echo "⚠️ Erro ao aplicar migrações. Tentando reparar..."
-          # Identificar a última migração no erro
-          MIGRATION=$(npx supabase migration list --output json -p ${{ secrets.PROJECT_Y_API_KEY }}  | jq -r '.[] | select(.status=="remote") | .id' | tail -n1)
-          
-          if [ -n "$MIGRATION" ]; then
-            npx supabase migration repair --status reverted $MIGRATION
-          fi
-
-          echo "🔄 Tentando novamente aplicar migrações..."
-          npx supabase db push --include-all -p ${{ secrets.PROJECT_Y_API_KEY }}
+          git config user.name "WallaceRodrigues07"
+          git config user.email "wallace.rodrigues@baymetrics.com.br"
+          git add supabase/migrations supabase/metadata
+          git commit -m "Atualiza migrations a partir do banco remoto" || echo "Sem alterações para commitar"
+          git push
