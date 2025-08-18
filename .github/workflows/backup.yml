@@ -1,37 +1,43 @@
-name: Supabase Homologation
+name: Supabase Migration Sync
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: # pode rodar manualmente
+  push:
+    paths:
+      - "supabase/migrations/**" # dispara quando migrations mudarem
 
 jobs:
-  homologation:
+  migrate:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout código
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Instalar Supabase CLI
+        run: npm install -g supabase@latest
 
-        
-      - name: Login to Supabase
-        run: npx supabase login --token ${{ secrets.SUPABASE_TOKEN }}
+      - name: Configurar Supabase Project Destino
+        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_DEST }} --password ${{ secrets.SUPABASE_DB_PASS }}
 
-      - name: Link Project Y -1
-        run: npx supabase link --project-ref ${{ secrets.PROJECT_Y_REF_ID }} -p ${{ secrets.PROJECT_Y_API_KEY }}
+      - name: Tentar aplicar migrações
+        id: migrate
+        continue-on-error: true
+        run: |
+          set -e
+          echo "🔄 Aplicando migrações..."
+          supabase db push --include-all -p ${{ secrets.SUPABASE_DB_PASS }}
 
-      - name: Pull Project Y -1
-        run: npx supabase db pull -p ${{ secrets.PROJECT_Y_API_KEY }}
+      - name: Resolver inconsistências (se falhou)
+        if: steps.migrate.outcome == 'failure'
+        run: |
+          echo "⚠️ Erro ao aplicar migrações. Tentando reparar..."
+          # Identificar a última migração no erro
+          MIGRATION=$(supabase migration list | grep "remote" | tail -n1 | awk '{print $1}')
+          
+          if [ -n "$MIGRATION" ]; then
+            supabase migration repair --status reverted $MIGRATION
+          fi
 
-      - name: Link Project X
-        run: npx supabase link --project-ref ${{ secrets.PROJECT_X_REF_ID }} -p ${{ secrets.PROJECT_X_API_KEY }}
-
-      - name: Pull Project X schema
-        run: npx supabase db pull -p ${{ secrets.PROJECT_X_API_KEY }}
-
-      - name: Link Project Y -2
-        run: npx supabase link --project-ref ${{ secrets.PROJECT_Y_REF_ID }} -p ${{ secrets.PROJECT_Y_API_KEY }}
-
-      - name: Push schema to Project Y
-        run: npx supabase db push -p ${{ secrets.PROJECT_Y_API_KEY }} --yes
+          echo "🔄 Tentando novamente aplicar migrações..."
+          supabase db push --include-all -p ${{ secrets.SUPABASE_DB_PASS }}
