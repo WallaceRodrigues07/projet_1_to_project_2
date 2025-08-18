@@ -37,7 +37,7 @@ jobs:
         run: |
           echo "⚠️ Erro ao aplicar migrações. Tentando reparar..."
           # Identificar a última migração no erro
-          MIGRATION=$(supabase migration list | grep "remote" | tail -n1 | awk '{print $1}')
+          MIGRATION=$(npx supabase migration list | grep "remote" | tail -n1 | awk '{print $1}')
           
           if [ -n "$MIGRATION" ]; then
             npx supabase migration repair --status reverted $MIGRATION
