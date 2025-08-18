@@ -17,11 +17,10 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
 
-      - name: Instalar Supabase CLI
-        run: npm install -g supabase@latest
+     
 
       - name: Configurar Supabase Project Destino
-        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_DEST }} --password ${{ secrets.SUPABASE_DB_PASS }}
+        run: npx supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_DEST }} --password ${{ secrets.SUPABASE_DB_PASS }}
 
       - name: Tentar aplicar migrações
         id: migrate
@@ -29,7 +28,7 @@ jobs:
         run: |
           set -e
           echo "🔄 Aplicando migrações..."
-          supabase db push --include-all -p ${{ secrets.SUPABASE_DB_PASS }}
+          npx supabase db push --include-all -p ${{ secrets.SUPABASE_DB_PASS }}
 
       - name: Resolver inconsistências (se falhou)
         if: steps.migrate.outcome == 'failure'
@@ -39,8 +38,8 @@ jobs:
           MIGRATION=$(supabase migration list | grep "remote" | tail -n1 | awk '{print $1}')
           
           if [ -n "$MIGRATION" ]; then
-            supabase migration repair --status reverted $MIGRATION
+            npx supabase migration repair --status reverted $MIGRATION
           fi
 
           echo "🔄 Tentando novamente aplicar migrações..."
-          supabase db push --include-all -p ${{ secrets.SUPABASE_DB_PASS }}
+          npx supabase db push --include-all -p ${{ secrets.SUPABASE_DB_PASS }}
