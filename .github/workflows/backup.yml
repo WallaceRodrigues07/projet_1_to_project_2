@@ -20,7 +20,7 @@ jobs:
      
 
       - name: Configurar Supabase Project Destino
-        run: npx supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_DEST }} --password ${{ secrets.SUPABASE_DB_PASS }}
+        run: npx supabase link --project-ref ${{ secrets.PROJECT_X_REF_ID }} --password ${{ secrets.PROJECT_X_API_KEY }}
 
       - name: Tentar aplicar migrações
         id: migrate
@@ -28,7 +28,7 @@ jobs:
         run: |
           set -e
           echo "🔄 Aplicando migrações..."
-          npx supabase db push --include-all -p ${{ secrets.SUPABASE_DB_PASS }}
+          npx supabase db push --include-all -p ${{ secrets.PROJECT_X_API_KEY }}
 
       - name: Resolver inconsistências (se falhou)
         if: steps.migrate.outcome == 'failure'
@@ -42,4 +42,4 @@ jobs:
           fi
 
           echo "🔄 Tentando novamente aplicar migrações..."
-          npx supabase db push --include-all -p ${{ secrets.SUPABASE_DB_PASS }}
+          npx supabase db push --include-all -p ${{ secrets.PROJECT_X_API_KEY }}
