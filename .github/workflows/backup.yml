@@ -51,7 +51,7 @@ jobs:
         run: |
           git config user.name "WallaceRodrigues07"
           git config user.email "wallace.rodrigues@baymetrics.com.br"
-          git add supabase/migrations supabase/metadata
+          git add .
           git commit -m "Atualiza migrations a partir do banco remoto" || echo "Sem alterações para commitar"
           git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }} HEAD:main
 
